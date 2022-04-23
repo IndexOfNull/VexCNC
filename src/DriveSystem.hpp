@@ -23,21 +23,16 @@ class DriveSystem {
 
         //TODO: Ensure velocity is in right units
 
-        void moveY(double abs_position, int16_t velocity) {
-            currentYEncoderU = currentUnitToEncoder(abs_position);
-            rightMotor->move_absolute(currentYEncoderU, currentUnitToEncoder(velocity));
-            leftMotor->move_absolute(currentYEncoderU, currentUnitToEncoder(velocity));
-        };
-        void moveX(double abs_position, int16_t velocity) {
-            currentXEncoderU = currentUnitToEncoder(abs_position);
-            carriageMotor->move_absolute(currentXEncoderU, currentUnitToEncoder(velocity));
-        };
-        void moveZ(double abs_position, int16_t velocity) {
-            headMotor->move_absolute(currentZEncoderU, currentUnitToEncoder(velocity));
-        };
+        void moveY(double abs_position, int16_t velocity);
+        void moveX(double abs_position, int16_t velocity);
+        void moveZ(double abs_position, int16_t velocity);
+
+        void moveY(double abs_position, int16_t velocity, bool async);
+        void moveX(double abs_position, int16_t velocity, bool async);
+        void moveZ(double abs_position, int16_t velocity, bool async);
 
         double encoderToCurrentUnit(double encoderUnits) {
-            switch unitMode {
+            switch (unitMode) {
                 case Millimeters:
                     return encoderUnits * millimeterToEncoderConst;
                     break;
@@ -48,10 +43,10 @@ class DriveSystem {
                     return encoderUnits;
                     break;
             }
-        }
+        };
 
         double currentUnitToEncoder(double currentUnit) {
-            switch unitMode {
+            switch (unitMode) {
                 case Millimeters:
                     return currentUnit / millimeterToEncoderConst;
                     break;
@@ -76,6 +71,13 @@ class DriveSystem {
         double currentYEncoderU; //Main carriage (two rails)
         double currentXEncoderU; //Main head carraige (one)
         double currentZEncoderU; //Pen actuator
+
+        void waitForTarget(pros::Motor *motor, uint16_t tolerance) {
+            double goal = motor->get_target_position();
+            while (!((motor->get_position() < goal + tolerance) && (motor->get_position() > goal - tolerance))) {
+                pros::delay(2);
+            }
+        }
 
 };
 
