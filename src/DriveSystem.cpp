@@ -47,6 +47,6 @@ void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
     double rightPos = rightMotor->get_position();
     double avg = (leftPos + rightPos) / 2;
 
-    millimeterToEncoderConst = (avg / distanceInMm);
+    millimeterToEncoderConst = (distanceInMm / avg);
 
 }
