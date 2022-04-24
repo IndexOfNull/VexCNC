@@ -10,6 +10,7 @@ enum UnitMode {
     RawEncoderUnits = 2
 };
 
+//TODO: Add wait for target reached.
 class DriveSystem {
 
     public:
@@ -55,7 +56,9 @@ class DriveSystem {
                     break;
                 case RawEncoderUnits:
                     return currentUnit;
+                    break;
             }
+            return 0; //this should never happen but the compiler complains if I don't do this
         }
 
         double millimeterToEncoderConst;
