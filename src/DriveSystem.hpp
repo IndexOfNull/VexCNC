@@ -22,15 +22,24 @@ class DriveSystem {
         void findEnd(int16_t velocity);
         void autoCalibrate(double distanceInMm, int16_t velocity);
 
-        //TODO: Ensure velocity is in right units
+        //TODO: Ensure velocity is in right units (make sure moves are linearly interpolated to take equal times to complete)
 
-        void moveY(double abs_position, int16_t velocity);
-        void moveX(double abs_position, int16_t velocity);
-        void moveZ(double abs_position, int16_t velocity);
+        // Sets the target X, but does not move to it
+        void setTargetX(double abs_position);
+        // Sets the target Y, but does not move to it
+        void setTargetY(double abs_position);
+        // Sets the target Z, but does not move to it
+        void setTargetZ(double abs_position);
 
-        void moveY(double abs_position, int16_t velocity, bool async);
-        void moveX(double abs_position, int16_t velocity, bool async);
-        void moveZ(double abs_position, int16_t velocity, bool async);
+        // Linearly moves to the set target 
+        void directMoveToTarget(bool async);
+        void moveY(double abs_position);
+        void moveX(double abs_position);
+        void moveZ(double abs_position);
+
+        void moveY(double abs_position, bool async);
+        void moveX(double abs_position, bool async);
+        void moveZ(double abs_position, bool async);
 
         double encoderToCurrentUnit(double encoderUnits) {
             switch (unitMode) {
@@ -61,19 +70,32 @@ class DriveSystem {
             return 0; //this should never happen but the compiler complains if I don't do this
         }
 
+        double getFeedrate() {
+            return encoderToCurrentUnit(feedrate);
+        }
+
+        void setFeedrate(double feedrate) {
+            currentUnitToEncoder(feedrate);
+        }
+
         double millimeterToEncoderConst;
+        double millimeterPerSecondToRPMConst;
         UnitMode unitMode = Millimeters;
 
     private:
+
+        // All values internally stored as encoder units ()
 
         pros::Motor *leftMotor;
         pros::Motor *rightMotor;
         pros::Motor *carriageMotor;
         pros::Motor *headMotor;
 
-        double currentYEncoderU; //Main carriage (two rails)
-        double currentXEncoderU; //Main head carraige (one)
-        double currentZEncoderU; //Pen actuator
+        double targetYEncoderU; //Main carriage (two rails)
+        double targetXEncoderU; //Main head carraige (one)
+        double targetZEncoderU; //Pen actuator
+
+        double feedrate;
 
         void waitForTarget(pros::Motor *motor, uint16_t tolerance) {
             double goal = motor->get_target_position();

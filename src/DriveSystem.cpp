@@ -5,11 +5,17 @@
 
 #define MOTOR_TARGET_TOLERANCE 5
 
+// Initializes the drive system and configures member motors. Do not modify motor encoder units after initialization!
 DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head) {
     leftMotor = motor_l;
     rightMotor = motor_r;
     carriageMotor = motor_carriage;
     headMotor = motor_head;
+
+    leftMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
+    rightMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
+    carriageMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
+    headMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
 }
 
 DriveSystem::~DriveSystem() {
@@ -52,10 +58,28 @@ void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
     millimeterToEncoderConst = (distanceInMm / avg);
 }
 
-void DriveSystem::moveY(double abs_position, int16_t velocity, bool async) {
-    currentYEncoderU = currentUnitToEncoder(abs_position);
-    rightMotor->move_absolute(currentYEncoderU, currentUnitToEncoder(velocity));
-    leftMotor->move_absolute(currentYEncoderU, currentUnitToEncoder(velocity));
+void DriveSystem::setTargetX(double abs_position) {
+    targetXEncoderU = currentUnitToEncoder(abs_position);
+}
+
+void DriveSystem::setTargetY(double abs_position) {
+    targetYEncoderU = currentUnitToEncoder(abs_position);
+}
+
+void DriveSystem::setTargetZ(double abs_position) {
+    targetZEncoderU = currentUnitToEncoder(abs_position);
+}
+
+void DriveSystem::directMoveToTarget(bool async) {
+
+}
+
+
+
+void DriveSystem::moveY(double abs_position, bool async) {
+    setTargetY(abs_position);
+    rightMotor->move_absolute(targetYEncoderU, feedrate);
+    leftMotor->move_absolute(targetYEncoderU, feedrate);
 
     if (async) {
         waitForTarget(leftMotor, MOTOR_TARGET_TOLERANCE);
@@ -63,31 +87,33 @@ void DriveSystem::moveY(double abs_position, int16_t velocity, bool async) {
     }
 };
 
-void DriveSystem::moveY(double abs_position, int16_t velocity) {
-    moveY(abs_position, velocity, true);
+void DriveSystem::moveY(double abs_position) {
+    moveY(abs_position, true);
 }
 
 
-void DriveSystem::moveX(double abs_position, int16_t velocity, bool async) {
-    currentXEncoderU = currentUnitToEncoder(abs_position);
-    carriageMotor->move_absolute(currentXEncoderU, currentUnitToEncoder(velocity));
+void DriveSystem::moveX(double abs_position, bool async) {
+    setTargetX(abs_position);
+    carriageMotor->move_absolute(targetXEncoderU, feedrate);
 
     if (async) {
         waitForTarget(carriageMotor, MOTOR_TARGET_TOLERANCE);
     }
 };
 
-void DriveSystem::moveX(double abs_position, int16_t velocity) {
-    moveX(abs_position, velocity, true);
+void DriveSystem::moveX(double abs_position) {
+    moveX(abs_position, true);
 }
 
-void DriveSystem::moveZ(double abs_position, int16_t velocity, bool async) {
-    headMotor->move_absolute(currentZEncoderU, currentUnitToEncoder(velocity));
+void DriveSystem::moveZ(double abs_position, bool async) {
+    setTargetZ(abs_position);
+    moveZ(targetZEncoderU, feedrate);
     if (async) {
         waitForTarget(headMotor, MOTOR_TARGET_TOLERANCE);
     }
 };
 
-void DriveSystem::moveZ(double abs_position, int16_t velocity) {
-    headMotor->move_absolute(currentZEncoderU, currentUnitToEncoder(velocity));
+void DriveSystem::moveZ(double abs_position) {
+    setTargetZ(abs_position);
+    headMotor->move_absolute(targetZEncoderU, feedrate);
 };
