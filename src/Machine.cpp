@@ -1,7 +1,8 @@
 #include "Machine.hpp"
+#include "DriveSystem.hpp"
 
-Machine::Machine() {
-    
+Machine::Machine(DriveSystem *system) {
+    driveSystem = system;
 }
 
 Machine::~Machine() {

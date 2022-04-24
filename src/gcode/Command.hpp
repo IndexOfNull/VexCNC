@@ -7,20 +7,26 @@
 
 enum CommandType {
     G,
-    Meta, //M
-    Tool, //T
-    Debug, //D
+    Meta,  // M
+    Tool,  // T
+    Debug, // D
     ReferenceLast
 };
 
-inline const char* commandToStr(CommandType v) {
+inline const char *commandToStr(CommandType v) {
     switch (v) {
-        case G: return "G";
-        case Meta: return "M";
-        case Tool: return "T";
-        case Debug: return "D";
-        case ReferenceLast: return "R";
-        default: return "";
+        case G:
+            return "G";
+        case Meta:
+            return "M";
+        case Tool:
+            return "T";
+        case Debug:
+            return "D";
+        case ReferenceLast:
+            return "R";
+        default:
+            return "";
     }
 }
 
@@ -29,7 +35,6 @@ class Command {
     static const size_t nparam = 0;
 
     public:
-
         Command(std::string *command);
         ~Command();
 
@@ -45,7 +50,13 @@ class Command {
         bool hasParameter(char param) {
             return argsMap.find(param) != argsMap.end();
         }
+
+        signed short getCommandNumber() {
+            return commandNumber;
+        }
+
         std::string getParameterAsString(char param);
+
         std::string *rawString() {
             return rawCommand;
         }
@@ -54,13 +65,14 @@ class Command {
         }
         std::string interpretedString();
 
-    private:
+        bool handleCommand();
 
-        CommandType type;
+    private:
+        CommandType commandType;
         signed short commandNumber;
         std::string *rawCommand;
         std::map<char, std::string> argsMap;
-
+        
 };
 
 #endif
