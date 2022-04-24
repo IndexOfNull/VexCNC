@@ -46,6 +46,7 @@ class Command {
         void eraseParameter(char param);
         void getParameter(char param);
         float getParameterAsFloat(char param);
+        double getParameterAsDouble(char param);
         signed int getParameterAsInt(char param);
         bool hasParameter(char param) {
             return argsMap.find(param) != argsMap.end();

@@ -95,6 +95,16 @@ float Command::getParameterAsFloat(char param) {
     }
 }
 
+double Command::getParameterAsDouble(char param) {
+    std::string paramStr = getParameterAsString(param);
+    if (paramStr.size() > 0) {
+        return std::atof(paramStr.data());
+    } else {
+        return Command::nparam;
+    }
+}
+
+
 signed int Command::getParameterAsInt(char param) {
     std::string paramStr = getParameterAsString(param);
     if (paramStr.size() > 0) {
