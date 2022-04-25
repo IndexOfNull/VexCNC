@@ -20,12 +20,29 @@ bool Machine::handleCommand(Command *command) {
 }
 
 bool Machine::handleGCommand(Command *command) {
+    double x = command->getParameterAsDouble('X');
+    double y = command->getParameterAsDouble('Y');
+    double z = command->getParameterAsDouble('Z');
+    double f = command->getParameterAsDouble('F');
+
+    if (f != Command::nparam) {
+        driveSystem->setFeedrate(f);
+    }
+
     switch (command->getCommandNumber()) {
         case 0:
         case 1:
-            auto x = command->getParameterAsFloat('X');
-            auto y = command->getParameterAsFloat('Y');
-            auto z = command->getParameterAsFloat('Z');
+            if (x != Command::nparam) {
+                driveSystem->setTargetX(x);
+            }
+            if (y != Command::nparam) {
+                driveSystem->setTargetY(y);
+            }
+            if (z != Command::nparam) {
+                driveSystem->setTargetZ(z);
+            }
+
+            driveSystem->directMoveToTarget(false);
     }
 }
 

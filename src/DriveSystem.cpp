@@ -54,8 +54,6 @@ void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
     double leftPos = leftMotor->get_position();
     double rightPos = rightMotor->get_position();
 
-
-
     millimeterToEncoderConsts[leftMotor] = leftPos / distanceInMm;
     millimeterToEncoderConsts[rightMotor] = rightPos / distanceInMm;
 }
@@ -74,9 +72,28 @@ void DriveSystem::setTargetZ(double abs_position) {
 
 void DriveSystem::directMoveToTarget(bool async) {
 
+    double deltaXEncoder = abs(targetXEncoderU - carriageMotor->get_position());
+    double deltaYEncoder = abs(targetYEncoderU - leftMotor->get_position());
+    double deltaZEncoder = abs(targetZEncoderU - headMotor->get_position());
+    double deltaXUnit = encoderToUnit(carriageMotor, deltaXEncoder);
+    double deltaYUnit = encoderToUnit(leftMotor, deltaYEncoder);
+    double deltaZUnit = encoderToUnit(headMotor, deltaZEncoder);
+
+    double distance = sqrt(pow(deltaXUnit, 2) + pow(deltaYUnit, 2) + pow(deltaZUnit, 2));
+    double time = distance / feedrate;
+
+    double velocityX = unitPerSecondToRPM(carriageMotor, deltaXUnit / time);
+    double velocityY = unitPerSecondToRPM(leftMotor, deltaYUnit / time);
+    double velocityZ = unitPerSecondToRPM(headMotor, deltaZUnit / time);
+
+    carriageMotor->move_absolute(targetZEncoderU, velocityX);
+    rightMotor->move_absolute(targetYEncoderU, velocityY);
+    leftMotor->move_absolute(targetYEncoderU, velocityY);
+    headMotor->move_absolute(targetZEncoderU, velocityZ);
+
 }
 
-
+// TODO: fix move commands to use feedrate properly
 
 void DriveSystem::moveY(double abs_position, bool async) {
     setTargetY(abs_position);
