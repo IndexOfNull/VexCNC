@@ -32,9 +32,9 @@ inline const char *commandToStr(CommandType v) {
 
 class Command {
 
-    static const size_t nparam = 0;
-
     public:
+        static const size_t nparam = 0;
+
         Command(std::string *command);
         ~Command();
 
