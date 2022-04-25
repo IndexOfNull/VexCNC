@@ -12,10 +12,10 @@ DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor
     carriageMotor = motor_carriage;
     headMotor = motor_head;
 
-    leftMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
-    rightMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
-    carriageMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
-    headMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_DEGREES);
+    leftMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+    rightMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+    carriageMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+    headMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
 }
 
 DriveSystem::~DriveSystem() {
@@ -53,21 +53,23 @@ void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
 
     double leftPos = leftMotor->get_position();
     double rightPos = rightMotor->get_position();
-    double avg = (leftPos + rightPos) / 2;
 
-    millimeterToEncoderConst = (distanceInMm / avg);
+
+
+    millimeterToEncoderConsts[leftMotor] = leftPos / distanceInMm;
+    millimeterToEncoderConsts[rightMotor] = rightPos / distanceInMm;
 }
 
 void DriveSystem::setTargetX(double abs_position) {
-    targetXEncoderU = currentUnitToEncoder(abs_position);
+    targetXEncoderU = unitToEncoder(carriageMotor, abs_position);
 }
 
 void DriveSystem::setTargetY(double abs_position) {
-    targetYEncoderU = currentUnitToEncoder(abs_position);
+    targetYEncoderU = unitToEncoder(leftMotor, abs_position); // We arbitrarily use the left motor here (right and left should have the same conversion constants)
 }
 
 void DriveSystem::setTargetZ(double abs_position) {
-    targetZEncoderU = currentUnitToEncoder(abs_position);
+    targetZEncoderU = unitToEncoder(headMotor, abs_position);
 }
 
 void DriveSystem::directMoveToTarget(bool async) {

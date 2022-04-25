@@ -3,6 +3,7 @@
 
 #include "DriveSystem.hpp"
 #include "pros/apix.h"
+#include <map>
 
 enum UnitMode {
     Millimeters = 0,
@@ -14,6 +15,8 @@ enum UnitMode {
 class DriveSystem {
 
     public:
+
+        static const size_t nunit = 0;
 
         DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head);
         ~DriveSystem();
@@ -41,13 +44,18 @@ class DriveSystem {
         void moveX(double abs_position, bool async);
         void moveZ(double abs_position, bool async);
 
-        double encoderToCurrentUnit(double encoderUnits) {
+        // Converts encoder counts into the drive system's current unit. Requires a calibrated motor to be supplied; returns DriveSystem::nunit when uncalibrated.
+        double encoderToUnit(pros::Motor *motor, double encoderUnits) {
+            if (millimeterToEncoderConsts.find(motor) != millimeterToEncoderConsts.end()) {
+                return nunit;
+            }
+
             switch (unitMode) {
                 case Millimeters:
-                    return encoderUnits * millimeterToEncoderConst;
+                    return encoderUnits * millimeterToEncoderConsts[motor];
                     break;
                 case Inches:
-                    return encoderUnits * millimeterToEncoderConst / 25.4;
+                    return encoderUnits * millimeterToEncoderConsts[motor] / 25.4;
                     break;
                 case RawEncoderUnits:
                     return encoderUnits;
@@ -55,36 +63,45 @@ class DriveSystem {
             }
         };
 
-        double currentUnitToEncoder(double currentUnit) {
+        // Converts the drive system's current unit into encoder counts. Requires a calibrated motor to be supplied; returns DriveSystem::nunit when uncalibrated.
+        double unitToEncoder(pros::Motor *motor, double unit) {
+            if (millimeterToEncoderConsts.find(motor) != millimeterToEncoderConsts.end()) {
+                return nunit;
+            }
+
             switch (unitMode) {
                 case Millimeters:
-                    return currentUnit / millimeterToEncoderConst;
+                    return unit / millimeterToEncoderConsts[motor];
                     break;
                 case Inches:
-                    return currentUnit / millimeterToEncoderConst * 25.4;
+                    return unit / millimeterToEncoderConsts[motor] * 25.4;
                     break;
                 case RawEncoderUnits:
-                    return currentUnit;
+                    return unit;
                     break;
             }
             return 0; //this should never happen but the compiler complains if I don't do this
         }
 
-        double getFeedrate() {
-            return encoderToCurrentUnit(feedrate);
+        // Converts the drive system's current unit per second into an RPM value for a specific motor. Returns DriveSystem::nunit if the supplied motor is uncalibrated.
+        double unitPerSecondToRPM(pros::Motor *motor, double unit) {
+            if (millimeterToEncoderConsts.find(motor) != millimeterToEncoderConsts.end()) {
+                return nunit;
+            }
+
+            return unitToEncoder(motor, unit) * 60; // (encoder counts / s) * (60 s / min)
         }
 
-        void setFeedrate(double feedrate) {
-            currentUnitToEncoder(feedrate);
-        }
+        double feedrate; // in current units (not encoder units; will be converted on-the-fly)
 
-        double millimeterToEncoderConst;
-        double millimeterPerSecondToRPMConst;
+        //double millimeterToEncoderConst;
         UnitMode unitMode = Millimeters;
 
     private:
 
-        // All values internally stored as encoder units ()
+        // All values treated as encoder counts
+
+        std::map<pros::Motor *, double> millimeterToEncoderConsts;
 
         pros::Motor *leftMotor;
         pros::Motor *rightMotor;
@@ -94,8 +111,6 @@ class DriveSystem {
         double targetYEncoderU; //Main carriage (two rails)
         double targetXEncoderU; //Main head carraige (one)
         double targetZEncoderU; //Pen actuator
-
-        double feedrate;
 
         void waitForTarget(pros::Motor *motor, uint16_t tolerance) {
             double goal = motor->get_target_position();
