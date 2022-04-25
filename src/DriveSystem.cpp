@@ -73,7 +73,7 @@ void DriveSystem::home(int16_t velocity) {
 
 }
 
-void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
+void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) { // does distance HAVE to be mm (or can it be current units?)
     home(velocity); // Will also tare positions 
     findCarriageEnd(-velocity);
 
@@ -82,8 +82,8 @@ void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
     double leftPos = leftMotor->get_position();
     double rightPos = rightMotor->get_position();
 
-    millimeterToEncoderConsts[leftMotor] = leftPos / distanceInMm;
-    millimeterToEncoderConsts[rightMotor] = rightPos / distanceInMm;
+    millimeterToEncoderConsts[leftMotor] = distanceInMm / leftPos;
+    millimeterToEncoderConsts[rightMotor] = distanceInMm / rightPos;
 }
 
 void DriveSystem::setTargetX(double abs_position) {
@@ -91,7 +91,7 @@ void DriveSystem::setTargetX(double abs_position) {
 }
 
 void DriveSystem::setTargetY(double abs_position) {
-    targetYEncoderU = unitToEncoder(leftMotor, abs_position); // We arbitrarily use the left motor here (right and left should have the same conversion constants)
+    targetYEncoderU = unitToEncoder(leftMotor, abs_position); // We arbitrarily use the left motor here (right and left should have similar conversion constants)
 }
 
 void DriveSystem::setTargetZ(double abs_position) {

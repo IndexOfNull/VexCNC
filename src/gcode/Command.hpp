@@ -43,22 +43,34 @@ class Command {
         CommandType getCommandType() { 
             return commandType;
         };
-        void setNumberParameter(char param, float value);
+
+        // Update or insert the given value for a parameter.
         void updateParameter(char param, std::string value);
+
+        // Remove the selected parameter from the parameter map.
         void eraseParameter(char param);
-        void getParameter(char param);
+
+        // Retrieves the selected parameter as a string. Returns Command::nparam if the parameter does not exist.
+        std::string getParameterAsString(char param);
+
+        // Retrieves and parses the selected parameter as a float. Returns Command::nparam if the parameter does not exist.
         float getParameterAsFloat(char param);
+
+        // Retrieves and parses the selected parameter as a double. Returns Command::nparam if the parameter does not exist.
         double getParameterAsDouble(char param);
+
+        // Retrieves and parses the selected parameter as a double. Returns Command::nparam if the parameter does not exist.
         signed int getParameterAsInt(char param);
+
+        // Returns true if the given parameter was specified for this command and false otherwise.
         bool hasParameter(char param) {
             return argsMap.find(param) != argsMap.end();
         }
 
+        // Retrieves the command number
         signed short getCommandNumber() {
             return commandNumber;
         }
-
-        std::string getParameterAsString(char param);
 
         std::string *rawString() {
             return rawCommand;
