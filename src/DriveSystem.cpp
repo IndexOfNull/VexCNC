@@ -1,9 +1,12 @@
 #include "DriveSystem.hpp"
 #include "pros/apix.h"
 #include <stdlib.h>
+#include <deque>
 #include <math.h>
 
-#define MOTOR_TARGET_TOLERANCE 5
+#define MOTOR_TARGET_TOLERANCE 5 // How close can a motor be before we unhalt execution?
+#define CRASH_ROLLING_AVERAGE_WINDOW 5 // How many values do we include in a rolling velocity average when intentionally crashing a motor?
+#define CRASH_VELOCITY_THRESHOLD 2 // What must our velocity subceed to count a motor as stopped?
 
 // Initializes the drive system and configures member motors. Do not modify motor encoder units after initialization!
 DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head) {
@@ -23,7 +26,7 @@ DriveSystem::~DriveSystem() {
 }
 
 //The velocity's sign (+ or -) dictates which end is found
-void DriveSystem::findEnd(int16_t velocity) {    
+void DriveSystem::findCarriageEnd(int16_t velocity) {    
     leftMotor->move_velocity(-velocity);
     rightMotor->move_velocity(-velocity);
     pros::delay(200);
@@ -38,18 +41,43 @@ void DriveSystem::findEnd(int16_t velocity) {
     rightMotor->brake();
 }
 
+// void DriveSystem::runUntilCrash(pros::Motor *motor, int16_t velocity) {
+//     motor->move_velocity(velocity);
+
+//     pros::delay(100);
+
+//     std::deque<double> values;
+//     for (size_t i = 0; i < CRASH_ROLLING_AVERAGE_WINDOW; i++) {
+//         values.push_front(velocity);
+//     }
+
+//     double avg = velocity;
+//     while (avg > CRASH_VELOCITY_THRESHOLD) {
+//         values.pop_front();
+//         values.push_back(motor->get_actual_velocity());
+
+//         avg = 0;
+//         for (auto it = values.begin(); it != values.end(); it++) {
+//             avg += *it * (1/values.size());
+//         }
+//         pros::delay(2);
+//     }
+// }
+
 //Will home the carriage. Sign of velocity is disregarded.
 void DriveSystem::home(int16_t velocity) {
 
-    findEnd(abs(velocity));
+    findCarriageEnd(abs(velocity));
     leftMotor->tare_position();
     rightMotor->tare_position();
 
 }
 
 void DriveSystem::autoCalibrate(double distanceInMm, int16_t velocity) {
-    home(velocity);
-    findEnd(-velocity);
+    home(velocity); // Will also tare positions 
+    findCarriageEnd(-velocity);
+
+    // TODO: Add homing of gantry (X-axis)
 
     double leftPos = leftMotor->get_position();
     double rightPos = rightMotor->get_position();
@@ -71,7 +99,6 @@ void DriveSystem::setTargetZ(double abs_position) {
 }
 
 void DriveSystem::directMoveToTarget(bool async) {
-
     double deltaXEncoder = abs(targetXEncoderU - carriageMotor->get_position());
     double deltaYEncoder = abs(targetYEncoderU - leftMotor->get_position());
     double deltaZEncoder = abs(targetZEncoderU - headMotor->get_position());
@@ -91,6 +118,12 @@ void DriveSystem::directMoveToTarget(bool async) {
     leftMotor->move_absolute(targetYEncoderU, velocityY);
     headMotor->move_absolute(targetZEncoderU, velocityZ);
 
+    if (async) { // All motors must be within tolerated range before we unblock execution
+        waitForTarget(leftMotor, MOTOR_TARGET_TOLERANCE);
+        waitForTarget(rightMotor, MOTOR_TARGET_TOLERANCE);
+        waitForTarget(headMotor, MOTOR_TARGET_TOLERANCE);
+        waitForTarget(carriageMotor, MOTOR_TARGET_TOLERANCE);
+    }
 }
 
 // TODO: fix move commands to use feedrate properly

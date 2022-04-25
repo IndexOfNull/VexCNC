@@ -38,7 +38,6 @@ void Machine::callCurrent() {
             }
         }
     }
-
     
-    //call handler
+    handleCommand(&currentCommand);
 }

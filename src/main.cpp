@@ -88,14 +88,21 @@ void opcontrol() {
 	driver.setUnitMode(Millimeters);
 	pros::delay(1000);
 	pros::lcd::set_text(1, "Homing");
-	//driver.home(20);
-	//driver.findEnd(-20);
+	//driver.findCarriageEnd(-20);
 
 	pros::delay(1000);
-	//driver.findEnd(-10);
+	//driver.findCarriageEnd(-10);
 	driver.autoCalibrate(297, 10);
 
 	driver.home(10);
+
+	driver.setTargetY(100);
+	driver.setFeedrate(100);
+	driver.directMoveToTarget(false);
+	driver.setTargetY(200);
+	driver.directMoveToTarget(false);
+
+	std::cout << "Done moving" << std::endl;
 
 	/*driver.moveX(30, 10, true);
 	driver.moveY(300, 30, false);*/

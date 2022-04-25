@@ -19,26 +19,32 @@ class DriveSystem {
 
         DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head);
         ~DriveSystem();
+
+        std::map<pros::Motor *, double> millimeterToEncoderConsts;
         
         void home(int16_t velocity);
-        void findEnd(int16_t velocity);
+        void findCarriageEnd(int16_t velocity);
+
+        //Sets motor velocities and halts until they stop registering movement.
+        //void runUntilCrash(pros::Motor* motor, int16_t velocity);
+
         void autoCalibrate(double distanceInMm, int16_t velocity);
 
         //TODO: Ensure velocity is in right units (make sure moves are linearly interpolated to take equal times to complete)
 
-        // Sets the target X, but does not move to it
+        // Sets the target X to the specified position (in current units), but does not move to it
         void setTargetX(double abs_position);
-        // Sets the target Y, but does not move to it
+        // Sets the target Y to the specified position (in current units), but does not move to it
         void setTargetY(double abs_position);
-        // Sets the target Z, but does not move to it
+        // Sets the target Z to the specified position (in current units), but does not move to it
         void setTargetZ(double abs_position);
 
         // Linearly moves to the set target 
         void directMoveToTarget(bool async);
+
         void moveY(double abs_position);
         void moveX(double abs_position);
         void moveZ(double abs_position);
-
         void moveY(double abs_position, bool async);
         void moveX(double abs_position, bool async);
         void moveZ(double abs_position, bool async);
@@ -86,12 +92,14 @@ class DriveSystem {
             return unitToEncoder(motor, unit) * 60; // (encoder counts / s) * (60 s / min)
         }
 
+        // Updates the feedrate (uses current unit mode)
         void setFeedrate(double rate) {
             feedrate = rate;
         }
 
         //double millimeterToEncoderConst;
         
+        // Switch to inches or millimeters, recalculating internal state as necessary.
         void setUnitMode(UnitMode mode) {
             if (mode == unitMode) {
                 return;
@@ -111,7 +119,6 @@ class DriveSystem {
 
         // All values treated as encoder counts
 
-        std::map<pros::Motor *, double> millimeterToEncoderConsts;
         UnitMode unitMode = Millimeters;
 
         pros::Motor *leftMotor;
