@@ -7,8 +7,7 @@
 
 enum UnitMode {
     Millimeters = 0,
-    Inches = 1,
-    RawEncoderUnits = 2
+    Inches = 1
 };
 
 //TODO: Add wait for target reached.
@@ -57,9 +56,6 @@ class DriveSystem {
                 case Inches:
                     return encoderUnits * millimeterToEncoderConsts[motor] / 25.4;
                     break;
-                case RawEncoderUnits:
-                    return encoderUnits;
-                    break;
             }
         };
 
@@ -76,9 +72,6 @@ class DriveSystem {
                 case Inches:
                     return unit / millimeterToEncoderConsts[motor] * 25.4;
                     break;
-                case RawEncoderUnits:
-                    return unit;
-                    break;
             }
             return 0; //this should never happen but the compiler complains if I don't do this
         }
@@ -92,21 +85,40 @@ class DriveSystem {
             return unitToEncoder(motor, unit) * 60; // (encoder counts / s) * (60 s / min)
         }
 
-        double feedrate; // in current units (not encoder units; will be converted on-the-fly)
+        void setFeedrate(double rate) {
+            feedrate = rate;
+        }
 
         //double millimeterToEncoderConst;
-        UnitMode unitMode = Millimeters;
+        
+        void setUnitMode(UnitMode mode) {
+            if (mode == unitMode) {
+                return;
+            }
+
+            switch (mode) {
+                case Millimeters:
+                    feedrate = feedrate * 25.4; //inches to mm
+                    break;
+                case Inches:
+                    feedrate = feedrate / 25.4;
+                    break;
+            }
+        }
 
     private:
 
         // All values treated as encoder counts
 
         std::map<pros::Motor *, double> millimeterToEncoderConsts;
+        UnitMode unitMode = Millimeters;
 
         pros::Motor *leftMotor;
         pros::Motor *rightMotor;
         pros::Motor *carriageMotor;
         pros::Motor *headMotor;
+
+        double feedrate; // in current units (not encoder units; will be converted on-the-fly)
 
         double targetYEncoderU; //Main carriage (two rails)
         double targetXEncoderU; //Main head carraige (one)
