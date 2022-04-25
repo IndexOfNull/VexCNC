@@ -40,7 +40,9 @@ class Command {
 
         void parse();
 
-        CommandType commandType();
+        CommandType getCommandType() { 
+            return commandType;
+        };
         void setNumberParameter(char param, float value);
         void updateParameter(char param, std::string value);
         void eraseParameter(char param);

@@ -1,8 +1,8 @@
 #include "Machine.hpp"
-#include "Command.hpp"
+#include "gcode/Command.hpp"
 
 bool Machine::handleCommand(Command *command) {
-    switch (command->commandType()) {
+    switch (command->getCommandType()) {
         case CommandType::G:
             return handleGCommand(command);
             break;

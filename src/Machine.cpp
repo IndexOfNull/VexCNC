@@ -20,7 +20,7 @@ Command Machine::advance() {
     commandIterator++;
     currentCommandIndex++;
 
-    if ((*commandIterator).commandType() != CommandType::ReferenceLast) {
+    if ((*commandIterator).getCommandType() != CommandType::ReferenceLast) {
         lastExplicitCommand = lastCommand;
     }
 
@@ -30,7 +30,7 @@ Command Machine::advance() {
 void Machine::callCurrent() {
     Command currentCommand = (*commandIterator); //will produce a copy that we can mock
 
-    if (currentCommand.commandType() == CommandType::ReferenceLast) {
+    if (currentCommand.getCommandType() == CommandType::ReferenceLast) {
         std::map<char, std::string> lastExplicitArgs = (*lastExplicitCommand).args();
         for (auto it = lastExplicitArgs.begin(); it != lastExplicitArgs.end(); it++) {
             if (!currentCommand.hasParameter(it->first)) { //If the current command does not have an argument that the last explicit command did

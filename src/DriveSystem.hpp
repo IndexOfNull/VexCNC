@@ -57,6 +57,7 @@ class DriveSystem {
                     return encoderUnits * millimeterToEncoderConsts[motor] / 25.4;
                     break;
             }
+            return 0;
         };
 
         // Converts the drive system's current unit into encoder counts. Requires a calibrated motor to be supplied; returns DriveSystem::nunit when uncalibrated.

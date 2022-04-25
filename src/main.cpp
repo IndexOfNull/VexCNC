@@ -82,7 +82,10 @@ void opcontrol() {
     pros::Motor carriageMotor(3);
     pros::Motor headMotor(4);
 
+
+
 	DriveSystem driver (&leftMotor, &rightMotor, &carriageMotor, &headMotor);
+	driver.setUnitMode(Millimeters);
 	pros::delay(1000);
 	pros::lcd::set_text(1, "Homing");
 	//driver.home(20);
@@ -91,6 +94,12 @@ void opcontrol() {
 	pros::delay(1000);
 	//driver.findEnd(-10);
 	driver.autoCalibrate(297, 10);
+
+	driver.home(10);
+
+	/*driver.moveX(30, 10, true);
+	driver.moveY(300, 30, false);*/
+
 
 	while (true) {
 		//std::cout << leftMotor.get_position() << ", " << rightMotor.get_position() << std::endl;

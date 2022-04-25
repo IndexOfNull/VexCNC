@@ -70,10 +70,6 @@ void Command::parse() {
     // std::cout << argsMap << std::endl;
 }
 
-CommandType Command::commandType() {
-    return commandType;
-}
-
 void Command::updateParameter(char param, std::string value) {
     argsMap[param] = value;
 }
