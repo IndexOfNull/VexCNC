@@ -40,14 +40,11 @@ class DriveSystem {
         void setTargetZ(double abs_position);
 
         // Linearly moves to the set target 
-        void directMoveToTarget(bool async);
+        void directMoveToTarget(bool async = true);
 
-        void moveY(double abs_position);
-        void moveX(double abs_position);
-        void moveZ(double abs_position);
-        void moveY(double abs_position, bool async);
-        void moveX(double abs_position, bool async);
-        void moveZ(double abs_position, bool async);
+        void moveY(double abs_position, bool async = true);
+        void moveX(double abs_position, bool async = true);
+        void moveZ(double abs_position, bool async = true);
 
         // Converts encoder counts into the drive system's current unit. Requires a calibrated motor to be supplied; returns DriveSystem::nunit when uncalibrated.
         double encoderToUnit(pros::Motor *motor, double encoderUnits) {
@@ -58,10 +55,8 @@ class DriveSystem {
             switch (unitMode) {
                 case Millimeters:
                     return encoderUnits * millimeterToEncoderConsts[motor];
-                    break;
                 case Inches:
                     return encoderUnits * millimeterToEncoderConsts[motor] / 25.4;
-                    break;
             }
             return 0;
         };
@@ -75,10 +70,8 @@ class DriveSystem {
             switch (unitMode) {
                 case Millimeters:
                     return unit / millimeterToEncoderConsts[motor];
-                    break;
                 case Inches:
                     return unit / millimeterToEncoderConsts[motor] * 25.4;
-                    break;
             }
             return 0; //this should never happen but the compiler complains if I don't do this
         }

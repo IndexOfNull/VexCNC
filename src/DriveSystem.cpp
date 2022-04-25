@@ -118,7 +118,7 @@ void DriveSystem::directMoveToTarget(bool async) {
     leftMotor->move_absolute(targetYEncoderU, velocityY);
     headMotor->move_absolute(targetZEncoderU, velocityZ);
 
-    if (async) { // All motors must be within tolerated range before we unblock execution
+    if (!async) { // All motors must be within tolerated range before we unblock execution
         waitForTarget(leftMotor, MOTOR_TARGET_TOLERANCE);
         waitForTarget(rightMotor, MOTOR_TARGET_TOLERANCE);
         waitForTarget(headMotor, MOTOR_TARGET_TOLERANCE);
@@ -126,46 +126,32 @@ void DriveSystem::directMoveToTarget(bool async) {
     }
 }
 
-// TODO: fix move commands to use feedrate properly
+// TODO: fix move commands to use direct move system
 
 void DriveSystem::moveY(double abs_position, bool async) {
     setTargetY(abs_position);
     rightMotor->move_absolute(targetYEncoderU, feedrate);
     leftMotor->move_absolute(targetYEncoderU, feedrate);
 
-    if (async) {
+    if (!async) {
         waitForTarget(leftMotor, MOTOR_TARGET_TOLERANCE);
         waitForTarget(rightMotor, MOTOR_TARGET_TOLERANCE);
     }
 };
 
-void DriveSystem::moveY(double abs_position) {
-    moveY(abs_position, true);
-}
-
-
 void DriveSystem::moveX(double abs_position, bool async) {
     setTargetX(abs_position);
     carriageMotor->move_absolute(targetXEncoderU, feedrate);
 
-    if (async) {
+    if (!async) {
         waitForTarget(carriageMotor, MOTOR_TARGET_TOLERANCE);
     }
 };
 
-void DriveSystem::moveX(double abs_position) {
-    moveX(abs_position, true);
-}
-
 void DriveSystem::moveZ(double abs_position, bool async) {
     setTargetZ(abs_position);
-    moveZ(targetZEncoderU, feedrate);
-    if (async) {
+    headMotor->move_absolute(targetZEncoderU, feedrate);
+    if (!async) {
         waitForTarget(headMotor, MOTOR_TARGET_TOLERANCE);
     }
-};
-
-void DriveSystem::moveZ(double abs_position) {
-    setTargetZ(abs_position);
-    headMotor->move_absolute(targetZEncoderU, feedrate);
 };
