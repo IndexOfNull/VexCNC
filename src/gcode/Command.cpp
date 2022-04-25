@@ -51,54 +51,39 @@ void Command::parse() {
             char paramKey = (*it).at(0);
             /*if (it == components.begin() && !(commandType == CommandType::ReferenceLast)) { //For non-reference commands, parse the first parameter as the command number
                 commandNumber = std::atoi((*it).substr(1).data());
-            } else if (paramMap.find(paramKey) == paramMap.end()) { //if it's not the first parameter and it hasn't been placed in the map yet
-                paramMap[paramKey] = (*it).substr(1);
+            } else if (argsMap.find(paramKey) == argsMap.end()) { //if it's not the first parameter and it hasn't been placed in the map yet
+                argsMap[paramKey] = (*it).substr(1);
             }*/
 
-            if (paramMap.find(paramKey) == paramMap.end()) {
-                paramMap[paramKey] = (*it).substr(1);
+            if (argsMap.find(paramKey) == argsMap.end()) {
+                argsMap[paramKey] = (*it).substr(1);
             }
         }
     }
 
     if (commandType != CommandType::ReferenceLast) {
-        commandNumber = std::atoi(paramMap[firstLetter].data());
-        eraseExplicitParameter(firstLetter); // Remove the actual command from the param list after extracting the commandNumber
+        commandNumber = std::atoi(argsMap[firstLetter].data());
+        eraseParameter(firstLetter); // Remove the actual command from the param list after extracting the commandNumber
     }
 
     std::cout << interpretedString() << std::endl;
-    // std::cout << paramMap << std::endl;
+    // std::cout << argsMap << std::endl;
 }
 
-std::string Command::getParameterAsString(char param, ParameterType type) {
-    switch (type) {
-        case Explicit:
-            if (paramMap.find(param) != paramMap.end()) {
-                return paramMap[param];
-            } else {
-                return "";
-            }
-        case Implicit:
-            if (implicitParamMap.find(param) != implicitParamMap.end()) {
-                return implicitParamMap[param];
-            } else {
-                return "";
-            }
-        case Either:
-            if (paramMap.find(param) != paramMap.end()) {
-                return paramMap[param];
-            } else if (implicitParamMap.find(param) != implicitParamMap.end()) {
-                return implicitParamMap[param];
-            } else {
-                return "";
-            }
-        default:
-            return "";
+void Command::updateParameter(char param, std::string value) {
+    argsMap[param] = value;
+}
+
+std::string Command::getParameterAsString(char param) {
+    if (argsMap.find(param) != argsMap.end()) {
+        return argsMap[param];
+    } else {
+        return "";
     }
 }
 
-float Command::getParameterAsFloat(char param, ParameterType type) {
-    std::string paramStr = getParameterAsString(param, type);
+float Command::getParameterAsFloat(char param) {
+    std::string paramStr = getParameterAsString(param);
     if (paramStr.size() > 0) {
         return std::atof(paramStr.data());
     } else {
@@ -106,8 +91,8 @@ float Command::getParameterAsFloat(char param, ParameterType type) {
     }
 }
 
-double Command::getParameterAsDouble(char param, ParameterType type) {
-    std::string paramStr = getParameterAsString(param, type);
+double Command::getParameterAsDouble(char param) {
+    std::string paramStr = getParameterAsString(param);
     if (paramStr.size() > 0) {
         return std::atof(paramStr.data());
     } else {
@@ -116,8 +101,8 @@ double Command::getParameterAsDouble(char param, ParameterType type) {
 }
 
 
-signed int Command::getParameterAsInt(char param, ParameterType type) {
-    std::string paramStr = getParameterAsString(param, type);
+signed int Command::getParameterAsInt(char param) {
+    std::string paramStr = getParameterAsString(param);
     if (paramStr.size() > 0) {
         return std::atoi(paramStr.data());
     } else {
@@ -125,19 +110,23 @@ signed int Command::getParameterAsInt(char param, ParameterType type) {
     }
 }
 
-
+void Command::eraseParameter(char param) {
+    if (argsMap.find(param) != argsMap.end()) {
+        argsMap.erase(param);
+    }
+}
 
 std::string Command::interpretedString() {
     std::stringstream output;
     if (commandType != CommandType::ReferenceLast) {
         output << commandToStr(commandType) << commandNumber;
-        if (paramMap.size() > 0) {
+        if (argsMap.size() > 0) {
             output << " ";
         }
     }
 
-    for (auto it = paramMap.begin(); it != paramMap.end(); it++) {
-        if (it != paramMap.begin()) {
+    for (auto it = argsMap.begin(); it != argsMap.end(); it++) {
+        if (it != argsMap.begin()) {
             output << " ";
         }
         output << it->first << it->second;
