@@ -12,6 +12,10 @@ void on_center_button() {
 	pressed = !pressed;
 	if (pressed) {
 		pros::lcd::set_text(2, "I was pressed!");
+		pros::Motor(1).move_velocity(0);
+		pros::Motor(2).move_velocity(0);
+		pros::Motor(3).move_velocity(0);
+		pros::Motor(4).move_velocity(0);
 	} else {
 		pros::lcd::clear_line(2);
 	}
@@ -82,24 +86,42 @@ void opcontrol() {
     pros::Motor carriageMotor(3);
     pros::Motor headMotor(4);
 
-
-
 	DriveSystem driver (&leftMotor, &rightMotor, &carriageMotor, &headMotor);
 	driver.setUnitMode(Millimeters);
 	pros::delay(1000);
 	pros::lcd::set_text(1, "Homing");
-	//driver.findCarriageEnd(-20);
 
-	pros::delay(1000);
-	//driver.findCarriageEnd(-10);
-	driver.autoCalibrate(297, 10);
-
+	//driver.autoCalibrate(295-50, 295-50, 10);
+	pros::lcd::set_text(1, "Calibrating");
+	driver.millimeterToEncoderConsts[leftMotor.get_port()] = 0.131016;
+	driver.millimeterToEncoderConsts[rightMotor.get_port()] = 0.127604;
+	driver.millimeterToEncoderConsts[carriageMotor.get_port()] = 0.0650903;
+	
 	driver.home(10);
 
-	driver.setTargetY(100);
-	driver.setFeedrate(100);
+	std::cout << driver.millimeterToEncoderConsts[leftMotor.get_port()] << ", " << driver.millimeterToEncoderConsts[rightMotor.get_port()] << std::endl;
+	std::cout << "E->mm:" << driver.encoderToUnit(&leftMotor, 300) << ", mm->E" << driver.unitToEncoder(&leftMotor, 100) << std::endl;
+
+	pros::delay(3000);
+
+	driver.setTargetY(50);
+	driver.setTargetX(50);
+	driver.setFeedrate(2000);
 	driver.directMoveToTarget(false);
-	driver.setTargetY(200);
+	pros::delay(2000);
+	driver.setTargetX(100);
+	driver.directMoveToTarget(false);
+	driver.setTargetX(150);
+	driver.setTargetY(100);
+	driver.directMoveToTarget(false);
+	driver.setTargetX(100);
+	driver.setTargetY(150);
+	driver.directMoveToTarget(false);
+	driver.setTargetX(50);
+	driver.setTargetY(100);
+	driver.directMoveToTarget(false);
+	driver.setTargetX(100);
+	driver.setTargetY(50);
 	driver.directMoveToTarget(false);
 
 	std::cout << "Done moving" << std::endl;

@@ -20,15 +20,30 @@ class DriveSystem {
         DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head);
         ~DriveSystem();
 
-        std::map<pros::Motor *, double> millimeterToEncoderConsts;
+        std::map<uint8_t, double> millimeterToEncoderConsts; // Port number to constants
         
+        // Home all axis (velocity is in RPM, not current units)
         void home(int16_t velocity);
+
+        //Will home the carriage on the X axis. Sign of velocity is disregarded.
+        void homeX(int16_t velocity);
+
+        //Will home the carriage on the Y axis. Sign of velocity is disregarded.
+        void homeY(int16_t velocity);
+
+        //Will home the pen actuator on the Z axis. Sign of velocity is disregarded.
+        void homeZ(int16_t velocity);
+
+        // Home Y axis (velocity is in RPM, not current units)
         void findCarriageEnd(int16_t velocity);
+
+        // Run any motor and halt until its actual velocity is zero (velocity is in RPM, not current units)
+        void runUntilCrash(pros::Motor *motor, int16_t velocity);
 
         //Sets motor velocities and halts until they stop registering movement.
         //void runUntilCrash(pros::Motor* motor, int16_t velocity);
 
-        void autoCalibrate(double distanceInMm, int16_t velocity);
+        void autoCalibrate(double yTrackLength, double xTrackLength, int16_t velocity);
 
         //TODO: Ensure velocity is in right units (make sure moves are linearly interpolated to take equal times to complete)
 
@@ -39,6 +54,21 @@ class DriveSystem {
         // Sets the target Z to the specified position (in current units), but does not move to it
         void setTargetZ(double abs_position);
 
+        // Returns the raw X target in encoder ticks
+        double getRawTargetX() {
+            return targetXEncoderU;
+        }
+
+        // Returns the raw X target in encoder ticks
+        double getRawTargetY() {
+            return targetYEncoderU;
+        }
+
+        // Returns the raw X target in encoder ticks
+        double getRawTargetZ() {
+            return targetZEncoderU;
+        }
+
         // Linearly moves to the set target 
         void directMoveToTarget(bool async = true);
 
@@ -48,41 +78,48 @@ class DriveSystem {
 
         // Converts encoder counts into the drive system's current unit. Requires a calibrated motor to be supplied; returns DriveSystem::nunit when uncalibrated.
         double encoderToUnit(pros::Motor *motor, double encoderUnits) {
-            if (millimeterToEncoderConsts.find(motor) != millimeterToEncoderConsts.end()) {
+            uint8_t port = motor->get_port();
+            if (millimeterToEncoderConsts.find(port) == millimeterToEncoderConsts.end()) {
                 return nunit;
             }
 
             switch (unitMode) {
                 case Millimeters:
-                    return encoderUnits * millimeterToEncoderConsts[motor];
+                    return encoderUnits * millimeterToEncoderConsts[port];
                 case Inches:
-                    return encoderUnits * millimeterToEncoderConsts[motor] / 25.4;
+                    return encoderUnits * millimeterToEncoderConsts[port] / 25.4;
             }
             return 0;
         };
 
         // Converts the drive system's current unit into encoder counts. Requires a calibrated motor to be supplied; returns DriveSystem::nunit when uncalibrated.
         double unitToEncoder(pros::Motor *motor, double unit) {
-            if (millimeterToEncoderConsts.find(motor) != millimeterToEncoderConsts.end()) {
+            uint8_t port = motor->get_port();
+            if (millimeterToEncoderConsts.find(port) == millimeterToEncoderConsts.end()) {
                 return nunit;
             }
 
             switch (unitMode) {
                 case Millimeters:
-                    return unit / millimeterToEncoderConsts[motor];
+                    return unit / millimeterToEncoderConsts[port];
                 case Inches:
-                    return unit / millimeterToEncoderConsts[motor] * 25.4;
+                    return (unit * 25.4) / millimeterToEncoderConsts[port];
             }
             return 0; //this should never happen but the compiler complains if I don't do this
         }
 
-        // Converts the drive system's current unit per second into an RPM value for a specific motor. Returns DriveSystem::nunit if the supplied motor is uncalibrated.
-        double unitPerSecondToRPM(pros::Motor *motor, double unit) {
-            if (millimeterToEncoderConsts.find(motor) != millimeterToEncoderConsts.end()) {
-                return nunit;
+        // Returns the number of encoder units are needed to make one revolution for a specific motor.
+        double getEncodersPerRevolution(pros::Motor *motor) {
+            switch (motor->get_gearing()) {
+                case pros::motor_gearset_e::E_MOTOR_GEARSET_06:
+                    return 300;
+                case pros::motor_gearset_e::E_MOTOR_GEARSET_18:
+                    return 900;
+                case pros::motor_gearset_e::E_MOTOR_GEARSET_36:
+                    return 1800;
+                default:
+                    return 900;
             }
-
-            return unitToEncoder(motor, unit) * 60; // (encoder counts / s) * (60 s / min)
         }
 
         // Updates the feedrate (uses current unit mode)
@@ -106,6 +143,8 @@ class DriveSystem {
                     feedrate = feedrate / 25.4;
                     break;
             }
+
+            unitMode = mode;
         }
 
     private:
@@ -119,16 +158,21 @@ class DriveSystem {
         pros::Motor *carriageMotor;
         pros::Motor *headMotor;
 
-        double feedrate; // in current units (not encoder units; will be converted on-the-fly)
+        double feedrate = 300; // in current units per minute
 
         double targetYEncoderU; //Main carriage (two rails)
         double targetXEncoderU; //Main head carraige (one)
         double targetZEncoderU; //Pen actuator
 
-        void waitForTarget(pros::Motor *motor, uint16_t tolerance) {
-            double goal = motor->get_target_position();
-            while (!((motor->get_position() < goal + tolerance) && (motor->get_position() > goal - tolerance))) {
-                pros::delay(2);
+        void waitForTarget(pros::Motor *motor, double target, uint16_t tolerance) {
+            //double goal = motor->get_target_position();
+            double currentPos = motor->get_position();
+            while (!((currentPos < target + tolerance) && (currentPos > target - tolerance))) {
+                if (currentPos == PROS_ERR_F) {
+                    return;
+                }
+                currentPos = motor->get_position();
+                //std::cout << currentPos << ", " << target << std::endl;
             }
         }
 
