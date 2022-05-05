@@ -4,7 +4,7 @@
 #include <deque>
 #include <math.h>
 
-#define MOTOR_TARGET_TOLERANCE 5 // How close can a motor be before we unhalt execution?
+#define MOTOR_TARGET_TOLERANCE 10 // How close can a motor be before we unhalt execution?
 #define CRASH_EFFICIENCY_SAMPLE_SIZE 3 // How many efficiency values do we sample to determine when to stop
 #define CRASH_VELOCITY_THRESHOLD 1 // What must our velocity subceed to count a motor as stopped?
 
@@ -19,6 +19,11 @@ DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor
     rightMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
     carriageMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
     headMotor->set_encoder_units(pros::motor_encoder_units_e::E_MOTOR_ENCODER_COUNTS);
+
+    leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
+    leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
+    leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
+    leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
 }
 
 DriveSystem::~DriveSystem() {
@@ -162,6 +167,7 @@ void DriveSystem::autoCalibrate(double yTrackLength, double xTrackLength, int16_
     runUntilCrash(carriageMotor, velocity);
     pros::delay(3000);
     double carriagePos = carriageMotor->get_position();
+    homeX(velocity);
 
     std::cout << "Autocalibrate: Left: " << leftPos << ", Right: " << rightPos << ", Carriage: " << carriagePos << std::endl;
 
@@ -169,9 +175,9 @@ void DriveSystem::autoCalibrate(double yTrackLength, double xTrackLength, int16_
     millimeterToEncoderConsts[rightMotor->get_port()] = yTrackLength / rightPos;
     millimeterToEncoderConsts[carriageMotor->get_port()] = xTrackLength / carriagePos;
 
-    std::cout << millimeterToEncoderConsts[leftMotor->get_port()] << std::endl;
-    std::cout << millimeterToEncoderConsts[rightMotor->get_port()] << std::endl;
-    std::cout << millimeterToEncoderConsts[carriageMotor->get_port()] << std::endl;
+    std::cout << "Left mm->enc: " << millimeterToEncoderConsts[leftMotor->get_port()] << std::endl;
+    std::cout << "Right mm->enc: " << millimeterToEncoderConsts[rightMotor->get_port()] << std::endl;
+    std::cout << "Carriage mm->enc: " << millimeterToEncoderConsts[carriageMotor->get_port()] << std::endl;
 }
 
 void DriveSystem::setTargetX(double abs_position) {
