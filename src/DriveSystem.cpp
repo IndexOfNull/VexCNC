@@ -109,13 +109,46 @@ void DriveSystem::homeX(int16_t velocity) {
 
 void DriveSystem::homeZ(int16_t velocity) {
     // TODO: implement Z homing
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "Touch pen 1 to paper, then press the middle button.");
+    while ((pros::lcd::read_buttons() && 2) != 1) {
+        pros::delay(10);
+    }
+    headMotor->tare_position();
+    pros::delay(100);
+    headMotor->move_velocity(10);
+    pros::delay(1000);
+    headMotor->brake();
+    pros::lcd::clear();
 }
 
 void DriveSystem::home(int16_t velocity) {
     homeY(velocity);
     homeX(velocity);
+    homeZ(velocity);
 }
 
+void DriveSystem::calibrateHead(double zTrackLength) {
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "Lower pen 2 to paper, then press the middle button.");
+    while ((pros::lcd::read_buttons() && 2) != 1) { // Logical AND with a bitfield to see if middle button pressed
+        pros::delay(10);
+    }
+    pros::lcd::set_text(0, "Waiting...");
+    pros::delay(4000); //Keep it from immediately skipping the next step
+
+    headMotor->tare_position();
+    pros::lcd::clear();
+    pros::lcd::set_text(0, "Lower pen 1 to paper, then press the middle button.");
+    while ((pros::lcd::read_buttons() && LCD_BTN_CENTER) != 1) {
+        pros::delay(10);
+    }
+
+    millimeterToEncoderConsts[headMotor->get_port()] = zTrackLength / headMotor->get_position();
+    std::cout << "Head mm->enc: " << millimeterToEncoderConsts[headMotor->get_port()] << std::endl;
+    headMotor->tare_position();
+    pros::lcd::clear();
+}
 
 void DriveSystem::autoCalibrate(double yTrackLength, double xTrackLength, int16_t velocity) { // does distance HAVE to be mm (or can it be current units?)
 

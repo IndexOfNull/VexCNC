@@ -45,6 +45,9 @@ class DriveSystem {
 
         void autoCalibrate(double yTrackLength, double xTrackLength, int16_t velocity);
 
+        // Manually calibrates the encoder to millimeter constants for the head. zTrackLength is the distance pen 2 travels up before pen 1 hits.
+        void calibrateHead(double zTrackLength);
+
         //TODO: Ensure velocity is in right units (make sure moves are linearly interpolated to take equal times to complete)
 
         // Sets the target X to the specified position (in current units), but does not move to it
