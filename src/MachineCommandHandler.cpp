@@ -1,8 +1,8 @@
-#include "Machine.hpp"
+#include "GCodeRunner.hpp"
 #include "gcode/Command.hpp"
 #include "gcode/ParameterMap.hpp"
 
-bool Machine::handleCommand(Command *command) {
+bool GCodeRunner::handleCommand(Command *command) {
     switch (command->getCommandType()) {
         case CommandType::G:
             return handleGCommand(command);
@@ -20,7 +20,7 @@ bool Machine::handleCommand(Command *command) {
     return false;
 }
 
-bool Machine::handleGCommand(Command *command) {
+bool GCodeRunner::handleGCommand(Command *command) {
     ParameterMap *params = command->getParameterMap();
     double x = params->getParameterAsDouble('X');
     double y = params->getParameterAsDouble('Y');
@@ -75,14 +75,14 @@ bool Machine::handleGCommand(Command *command) {
     }
 }
 
-bool Machine::handleDebugCommand(Command *command) {
+bool GCodeRunner::handleDebugCommand(Command *command) {
 
 }
 
-bool Machine::handleMetaCommand(Command *command) {
+bool GCodeRunner::handleMetaCommand(Command *command) {
 
 }
 
-bool Machine::handleToolCommand(Command *command) {
+bool GCodeRunner::handleToolCommand(Command *command) {
 
 }
