@@ -193,28 +193,29 @@ void DriveSystem::setTargetZ(double abs_position) {
 }
 
 void DriveSystem::directMoveToTarget(bool async) {
-    double deltaXEncoder = abs(targetXEncoderU - carriageMotor->get_position());
-    double deltaYEncoder = abs(targetYEncoderU - leftMotor->get_position());
-    double deltaZEncoder = abs(targetZEncoderU - headMotor->get_position());
-    double deltaXUnit = encoderToUnit(carriageMotor, deltaXEncoder);
-    double deltaYUnit = encoderToUnit(leftMotor, deltaYEncoder);
-    double deltaZUnit = encoderToUnit(headMotor, deltaZEncoder);
+    float deltaXEncoder = abs(targetXEncoderU - carriageMotor->get_position());
+    float deltaYEncoder = abs(targetYEncoderU - leftMotor->get_position());
+    float deltaZEncoder = abs(targetZEncoderU - headMotor->get_position());
+    float deltaXUnit = encoderToUnit(carriageMotor, deltaXEncoder);
+    float deltaYUnit = encoderToUnit(leftMotor, deltaYEncoder);
+    float deltaZUnit = encoderToUnit(headMotor, deltaZEncoder);
 
-    double distance = sqrt(pow(deltaXUnit, 2) + pow(deltaYUnit, 2) + pow(deltaZUnit, 2));
-    double time = distance / feedrate;
+    float distance = sqrt(pow(deltaXUnit, 2) + pow(deltaYUnit, 2) + pow(deltaZUnit, 2));
+    float time = distance / feedrate;
 
     //Convert deltas into encoder steps per minute for each motor
-    double velocityX = (deltaXEncoder / time) / getEncodersPerRevolution(carriageMotor);
-    double velocityYL = (deltaYEncoder / time) / getEncodersPerRevolution(leftMotor);
-    double velocityYR = (deltaYEncoder / time) / getEncodersPerRevolution(rightMotor);
-    double velocityZ = (deltaZEncoder / time) / getEncodersPerRevolution(headMotor);
+    float velocityX = (deltaXEncoder / time) / getEncodersPerRevolution(carriageMotor);
+    float velocityYL = (deltaYEncoder / time) / getEncodersPerRevolution(leftMotor);
+    float velocityYR = (deltaYEncoder / time) / getEncodersPerRevolution(rightMotor);
+    float velocityZ = (deltaZEncoder / time) / getEncodersPerRevolution(headMotor);
 
-    /*
+    
     std::cout << std::endl << "Moving to target X: " << targetXEncoderU << ", Y: " << targetYEncoderU << ", Z: " << targetZEncoderU << " in " << time*60 << " seconds" << std::endl;
     std::cout << "Velocity: (" << velocityX << ", " << velocityYL << ", " << velocityZ << ")" << std::endl;
     std::cout << "Deltas: (" << deltaXEncoder << ", " << deltaYEncoder << ", " << deltaZEncoder << ")" << std::endl;
     std::cout << "Distance: " << distance << std::endl;
-    */
+    
+
 
     carriageMotor->move_absolute(targetXEncoderU, velocityX);
     rightMotor->move_absolute(targetYEncoderU, velocityYR);
@@ -222,10 +223,7 @@ void DriveSystem::directMoveToTarget(bool async) {
     headMotor->move_absolute(targetZEncoderU, velocityZ);
 
     if (!async) { // All motors must be within tolerated range before we unblock execution
-        waitForTarget(leftMotor, targetYEncoderU, MOTOR_TARGET_TOLERANCE);
-        waitForTarget(rightMotor, targetYEncoderU, MOTOR_TARGET_TOLERANCE);
-        //waitForTarget(headMotor, MOTOR_TARGET_TOLERANCE);
-        waitForTarget(carriageMotor, targetXEncoderU, MOTOR_TARGET_TOLERANCE);
+        pros::delay(time*60*1000 + 333);
     }
     
 }

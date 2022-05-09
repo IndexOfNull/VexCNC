@@ -167,15 +167,16 @@ class DriveSystem {
         double targetXEncoderU; //Main head carraige (one)
         double targetZEncoderU; //Pen actuator
 
-        void waitForTarget(pros::Motor *motor, double target, uint16_t tolerance) {
+        void waitForTarget(pros::Motor *motor, float target, uint16_t tolerance) {
             //double goal = motor->get_target_position();
-            double currentPos = motor->get_position();
+            float currentPos = motor->get_position();
             while (!((currentPos < target + tolerance) && (currentPos > target - tolerance))) {
                 if (currentPos == PROS_ERR_F) {
                     return;
                 }
                 currentPos = motor->get_position();
-                //std::cout << currentPos << ", " << target << std::endl;
+                //std::cout << currentPos << ", " << target << ", " << motor->get_target_position() << std::endl;
+                pros::delay(20);
             }
         }
 
