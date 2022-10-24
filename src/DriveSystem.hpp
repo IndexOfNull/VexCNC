@@ -10,6 +10,11 @@ enum UnitMode {
     Inches = 1
 };
 
+enum PositionMode {
+    Absolute = 0,
+    Relative = 1
+};
+
 //TODO: Add wait for target reached.
 class DriveSystem {
 
@@ -17,7 +22,7 @@ class DriveSystem {
 
         static const size_t nunit = 0;
 
-        DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head);
+        DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head, double xTrackLength, double yTrackLength, double zTrackLength);
         ~DriveSystem();
 
         std::map<uint8_t, double> millimeterToEncoderConsts; // Port number to constants
@@ -43,10 +48,12 @@ class DriveSystem {
         //Sets motor velocities and halts until they stop registering movement.
         //void runUntilCrash(pros::Motor* motor, int16_t velocity);
 
-        void autoCalibrate(double yTrackLength, double xTrackLength, int16_t velocity);
+        void autoCalibrate(int16_t velocity);
 
         // Manually calibrates the encoder to millimeter constants for the head. zTrackLength is the distance pen 2 travels up before pen 1 hits.
-        void calibrateHead(double zTrackLength);
+        void calibrateHead();
+
+        void stopAll();
 
         //TODO: Ensure velocity is in right units (make sure moves are linearly interpolated to take equal times to complete)
 
@@ -57,17 +64,26 @@ class DriveSystem {
         // Sets the target Z to the specified position (in current units), but does not move to it
         void setTargetZ(double abs_position);
 
+        // Returns the X target in current units
+        void setRelativeTargetX(double rel_position);
+
+        // Returns the raw Y target in current units
+        void setRelativeTargetY(double rel_position);
+
+        // Returns the raw Z target in current units
+        void setRelativeTargetZ(double rel_position);
+
         // Returns the raw X target in encoder ticks
         double getRawTargetX() {
             return targetXEncoderU;
         }
 
-        // Returns the raw X target in encoder ticks
+        // Returns the raw Y target in encoder ticks
         double getRawTargetY() {
             return targetYEncoderU;
         }
 
-        // Returns the raw X target in encoder ticks
+        // Returns the raw Z target in encoder ticks
         double getRawTargetZ() {
             return targetZEncoderU;
         }
@@ -150,6 +166,8 @@ class DriveSystem {
             unitMode = mode;
         }
 
+        PositionMode positionMode = Absolute;
+
     private:
 
         // All values treated as encoder counts
@@ -161,11 +179,15 @@ class DriveSystem {
         pros::Motor *carriageMotor;
         pros::Motor *headMotor;
 
-        double feedrate = 300; // in current units per minute
+        double feedrate = 1; // in current units per minute
 
         double targetYEncoderU; //Main carriage (two rails)
         double targetXEncoderU; //Main head carraige (one)
         double targetZEncoderU; //Pen actuator
+
+        double xTrackLength;
+        double yTrackLength;
+        double zTrackLength;
 
         void waitForTarget(pros::Motor *motor, float target, uint16_t tolerance) {
             //double goal = motor->get_target_position();

@@ -9,7 +9,7 @@
 #define CRASH_VELOCITY_THRESHOLD 1 // What must our velocity subceed to count a motor as stopped?
 
 // Initializes the drive system and configures member motors. Do not modify motor encoder units after initialization!
-DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head) {
+DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor *motor_carriage, pros::Motor *motor_head, double x_length, double y_length, double z_length) {
     leftMotor = motor_l;
     rightMotor = motor_r;
     carriageMotor = motor_carriage;
@@ -24,10 +24,21 @@ DriveSystem::DriveSystem(pros::Motor *motor_l, pros::Motor *motor_r, pros::Motor
     leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
     leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
     leftMotor->set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_HOLD);
+
+    xTrackLength = x_length;
+    yTrackLength = y_length;
+    zTrackLength = z_length;
 }
 
 DriveSystem::~DriveSystem() {
 
+}
+
+void DriveSystem::stopAll() {
+    carriageMotor->brake();
+    headMotor->brake();
+    leftMotor->brake();
+    rightMotor->brake();
 }
 
 //The velocity's sign (+ or -) dictates which end is found
@@ -133,7 +144,7 @@ void DriveSystem::home(int16_t velocity) {
     homeZ(velocity);
 }
 
-void DriveSystem::calibrateHead(double zTrackLength) {
+void DriveSystem::calibrateHead() {
     pros::lcd::clear();
     pros::lcd::set_text(0, "Lower pen 2 to paper, then press the middle button.");
     while ((pros::lcd::read_buttons() && 2) != 1) { // Logical AND with a bitfield to see if middle button pressed
@@ -155,7 +166,7 @@ void DriveSystem::calibrateHead(double zTrackLength) {
     pros::lcd::clear();
 }
 
-void DriveSystem::autoCalibrate(double yTrackLength, double xTrackLength, int16_t velocity) { // does distance HAVE to be mm (or can it be current units?)
+void DriveSystem::autoCalibrate(int16_t velocity) { // does distance HAVE to be mm (or can it be current units?)
 
     homeY(velocity); // Will also tare positions 
     findCarriageEnd(velocity);
@@ -192,6 +203,18 @@ void DriveSystem::setTargetZ(double abs_position) {
     targetZEncoderU = unitToEncoder(headMotor, abs_position);
 }
 
+void DriveSystem::setRelativeTargetX(double rel_position) {
+    targetXEncoderU += unitToEncoder(carriageMotor, rel_position);
+}
+
+void DriveSystem::setRelativeTargetY(double rel_position) {
+    targetXEncoderU += unitToEncoder(leftMotor, rel_position);
+}
+
+void DriveSystem::setRelativeTargetZ(double rel_position) {
+    targetXEncoderU += unitToEncoder(headMotor, rel_position);
+}
+
 void DriveSystem::directMoveToTarget(bool async) {
     float deltaXEncoder = abs(targetXEncoderU - carriageMotor->get_position());
     float deltaYEncoder = abs(targetYEncoderU - leftMotor->get_position());
@@ -223,7 +246,7 @@ void DriveSystem::directMoveToTarget(bool async) {
     headMotor->move_absolute(targetZEncoderU, velocityZ);
 
     if (!async) { // All motors must be within tolerated range before we unblock execution
-        pros::delay(time*60*1000 + 333);
+        pros::delay(time*60*1000 + 200);
     }
     
 }

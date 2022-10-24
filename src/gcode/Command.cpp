@@ -60,7 +60,7 @@ void Command::parse() {
         parameters.eraseParameter(firstLetter); // Remove the actual command from the param list after extracting the commandNumber
     }
 
-    std::cout << interpretedString() << std::endl;
+    // std::cout << interpretedString() << std::endl;
     // std::cout << argsMap << std::endl;
 }
 

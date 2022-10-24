@@ -28,7 +28,7 @@ class GCodeRunner {
 
         // Returns false if the end of the command list is hit.
         bool advance() {
-            if ((commandIterator != commands->end()) && (++commandIterator == commands->end())) { // Return false if we are at the end or will hit the end
+            if ((commandIterator != commands->end()) && (++commandIterator == commands->end()) || ended) { // Return false if we are at the end or will hit the end
                 return false;
             }
             return true;
@@ -36,8 +36,8 @@ class GCodeRunner {
 
         void runAll() {
             while (advance()) {
-                std::cout << (*commandIterator).interpretedString() << std::endl;
-                //executeCurrentCommand();
+                //std::cout << (*commandIterator).interpretedString() << std::endl;
+                executeCurrentCommand();
             }
         }
 
@@ -58,6 +58,8 @@ class GCodeRunner {
         size_t currentCommandIndex;
         Command *lastExplicitCommand; // the last command that wasn't of type Command::ReferenceLast
         DriveSystem *driveSystem;
+
+        bool ended = false; // A kill-switch able to be set by an M-2 command
 
         bool handleGCommand(Command *command);
         bool handleMetaCommand(Command *command);

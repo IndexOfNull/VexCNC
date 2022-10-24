@@ -25,11 +25,14 @@ void GCodeParser::readFile(std::string name) {
 void GCodeParser::tokenizeGCode(bool parse) {
     std::list<std::string> lines = splitStr(inputData, "\n");
     for (auto it = lines.begin(); it != lines.end(); it++) {
-        Command command (&(*it));
-        if (parse == true) {
-            command.parse();
+        std::string line = trim(*it);
+        if (line != "" || line != "\n") {
+            Command command (&line);
+            if (parse == true) {
+                command.parse();
+            }
+            commands.push_back(command);
         }
-        commands.push_back(command);
     }
 }
 
